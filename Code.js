@@ -689,15 +689,17 @@ L Impressions | M Publisher Spend | N DSP Fee Value | O Total Media Spend | P Gr
 
 - Plan-side (I, K, P, Q) in display currency (F2)
 
-- Gross Profit (Q) = Net - Media - Hard Costs (before trading deal)
+- Gross Margin = Net - Media - Hard Costs (before trading deal)
 
-- Gross Margin (P) = Gross Profit - (Gross Profit * Trading Deal %)
+- Trading Deal Rebate = Net Budget (Plan Currency) * Trading Deal %
+
+- Gross Profit = Gross Margin - Trading Deal Rebate
 
 - Gross Margin % (R) = Gross Margin / Net
 
 - Gross Profit % (S) = Gross Profit / Net
 
-- Margin (T) = Gross Margin / Net (displayed as %), blended total = SUM(P)/SUM(K)
+- Margin (T) = Gross Margin / Net (displayed as %), blended total = SUM(Gross Margin)/SUM(Net)
 
 */
 
@@ -1029,11 +1031,15 @@ function recalculatePlanner() {
 
     r.grossMarginPlan = toPlan(grossMarginNative, r.curr, target);
 
-    // Trading Deal Amount (from Gross Margin)
+    // Trading Deal Amount (percentage of Net Budget/Revenue in plan currency)
 
-    const tradingDealNative = grossMarginNative * tradingDealPct;
+    const tradingDealPlan = r.netPlan * tradingDealPct;
 
-    // Gross Profit (Gross Margin - Trading Deal - AFTER trading deal, lower value)
+    // Convert trading deal rebate to native currency for calculation
+
+    const tradingDealNative = toNative(tradingDealPlan, target, r.curr);
+
+    // Gross Profit (Gross Margin - Trading Deal Rebate - AFTER trading deal, lower value)
 
     const grossProfitNative = grossMarginNative - tradingDealNative;
 
