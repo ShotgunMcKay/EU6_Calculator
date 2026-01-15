@@ -1492,3 +1492,6 @@ function getTotalPercentage() {
 /* ========== SAFE ALERT WRAPPER ========== */
 
 function safeAlert(msg){try{SpreadsheetApp.getUi().alert(msg);}catch(e){Logger.log(msg);}}
+
+
+// FINAL DEPLOY TEST – 2026-01-15
