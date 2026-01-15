@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <base target="_top">
+
+  <style>
+
+    * { box-sizing: border-box; }
+
+    body { 
+
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+
+      font-size: 14px; 
+
+      padding: 0; 
+
+      margin: 0;
+
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+      min-height: 100vh;
+
+      color: #333;
+
+    }
+
+    .container {
+
+      background: white;
+
+      margin: 0;
+
+      padding: 20px;
+
+      min-height: 100vh;
+
+      box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+
+    }
+
+    h3 { 
+
+      margin: 0 0 24px 0; 
+
+      color: #1a1a1a; 
+
+      font-size: 24px;
+
+      font-weight: 600;
+
+      letter-spacing: -0.5px;
+
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+      -webkit-background-clip: text;
+
+      -webkit-text-fill-color: transparent;
+
+      background-clip: text;
+
+    }
+
+    label { 
+
+      display: block; 
+
+      margin-bottom: 6px; 
+
+      font-weight: 500; 
+
+      color: #4a5568; 
+
+      font-size: 13px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.5px;
+
+    }
+
+    select, input[type="number"] { 
+
+      width: 100%; 
+
+      margin-bottom: 16px; 
+
+      padding: 12px 14px; 
+
+      box-sizing: border-box; 
+
+      border: 2px solid #e2e8f0;
+
+      border-radius: 8px;
+
+      font-size: 14px;
+
+      background: white;
+
+      color: #2d3748;
+
+      transition: all 0.2s ease;
+
+      font-family: inherit;
+
+    }
+
+    select:hover, input[type="number"]:hover {
+
+      border-color: #cbd5e0;
+
+    }
+
+    select:focus, input[type="number"]:focus {
+
+      outline: none;
+
+      border-color: #667eea;
+
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+
+    }
+
+    button { 
+
+      width: 100%; 
+
+      padding: 14px 16px; 
+
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+      color: white; 
+
+      border: none; 
+
+      cursor: pointer; 
+
+      margin-bottom: 10px; 
+
+      border-radius: 8px;
+
+      font-size: 14px;
+
+      font-weight: 600;
+
+      letter-spacing: 0.3px;
+
+      transition: all 0.3s ease;
+
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+
+      position: relative;
+
+      overflow: hidden;
+
+    }
+
+    button::before {
+
+      content: '';
+
+      position: absolute;
+
+      top: 50%;
+
+      left: 50%;
+
+      width: 0;
+
+      height: 0;
+
+      border-radius: 50%;
+
+      background: rgba(255, 255, 255, 0.3);
+
+      transform: translate(-50%, -50%);
+
+      transition: width 0.6s, height 0.6s;
+
+    }
+
+    button:hover::before {
+
+      width: 300px;
+
+      height: 300px;
+
+    }
+
+    button:hover { 
+
+      transform: translateY(-2px);
+
+      box-shadow: 0 6px 12px rgba(102, 126, 234, 0.35);
+
+    }
+
+    button:active {
+
+      transform: translateY(0);
+
+      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.25);
+
+    }
+
+    button:disabled {
+
+      opacity: 0.6;
+
+      cursor: not-allowed;
+
+      transform: none;
+
+    }
+
+    button.secondary { 
+
+      background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+
+      box-shadow: 0 4px 6px rgba(113, 128, 150, 0.25);
+
+    }
+
+    button.secondary:hover {
+
+      box-shadow: 0 6px 12px rgba(113, 128, 150, 0.35);
+
+    }
+
+    button.danger { 
+
+      background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+
+      box-shadow: 0 4px 6px rgba(245, 101, 101, 0.25);
+
+    }
+
+    button.danger:hover {
+
+      box-shadow: 0 6px 12px rgba(245, 101, 101, 0.35);
+
+    }
+
+    .inline { 
+
+      display: flex; 
+
+      align-items: center; 
+
+      justify-content: space-between; 
+
+      color: #4a5568; 
+
+      margin: -4px 0 8px 0; 
+
+    }
+
+    .note { 
+
+      color: #718096; 
+
+      font-size: 12px; 
+
+      margin-top: -6px; 
+
+      margin-bottom: 16px; 
+
+      line-height: 1.5;
+
+    }
+
+    .warn { 
+
+      color: #d69e2e; 
+
+      font-size: 13px; 
+
+      font-weight: 500;
+
+      padding: 10px 12px;
+
+      background: #fef5e7;
+
+      border-left: 3px solid #d69e2e;
+
+      border-radius: 4px;
+
+      margin-bottom: 16px;
+
+    }
+
+    .ok { 
+
+      color: #38a169; 
+
+      font-size: 13px; 
+
+      font-weight: 500;
+
+      padding: 10px 12px;
+
+      background: #f0fff4;
+
+      border-left: 3px solid #38a169;
+
+      border-radius: 4px;
+
+      margin-bottom: 16px;
+
+    }
+
+    .error { 
+
+      color: #e53e3e; 
+
+      font-size: 13px; 
+
+      font-weight: 500;
+
+      padding: 10px 12px;
+
+      background: #fff5f5;
+
+      border-left: 3px solid #e53e3e;
+
+      border-radius: 4px;
+
+      margin-bottom: 16px;
+
+    }
+
+    .hidden { display: none; }
+
+    #status {
+
+      margin-top: 16px;
+
+      padding: 12px;
+
+      background: #f7fafc;
+
+      border-radius: 6px;
+
+      font-size: 13px;
+
+      min-height: 20px;
+
+    }
+
+    .tip-box {
+
+      background: #edf2f7;
+
+      padding: 12px 14px;
+
+      border-radius: 6px;
+
+      margin-bottom: 16px;
+
+      font-size: 12px;
+
+      color: #4a5568;
+
+      border-left: 3px solid #667eea;
+
+    }
+
+    .section-divider {
+
+      height: 1px;
+
+      background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+
+      margin: 20px 0;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h3>🌍 EU6 Planner</h3>
+
+    <label for="countrySelect">Country</label>
+
+    <select id="countrySelect"></select>
+
+    <label for="channelSelect">Channel</label>
+
+    <select id="channelSelect"></select>
+
+    <label for="publisherSelect">Publisher</label>
+
+    <select id="publisherSelect"></select>
+
+    <label for="formatSelect">Format</label>
+
+    <select id="formatSelect"></select>
+
+    <div class="inline">
+
+      <label for="weightInput">Percentage Delivery</label>
+
+      <span id="remainingHint" class="note"></span>
+
+    </div>
+
+    <input type="number" id="weightInput" min="0" step="0.01" placeholder="e.g. 0.25 or 25%">
+
+    <label for="dspSelect">DSP</label>
+
+    <select id="dspSelect"></select>
+
+    <div id="rateNotice" class="note hidden"></div>
+
+    <div class="section-divider"></div>
+
+    <button id="addBtn" onclick="addRow()">➕ Add to Planner</button>
+
+    <button class="secondary" onclick="recalculate()">↻ Recalculate</button>
+
+    <button class="danger" onclick="removeSelectedRow()">🗑️ Remove Selected Row</button>
+
+    <div class="tip-box">💡 Tip: Click any cell in the row in the sheet, then press remove.</div>
+
+    <div id="status" class="note"></div>
+
+  </div>
+
+  <script>
+
+    let rateData = [];
+
+    let dspList = [];
+
+    function init() {
+
+      setStatus('Loading…');
+
+      google.script.run
+
+        .withSuccessHandler(data => {
+
+          const arr = Array.isArray(data) ? data : [];
+
+          rateData = arr;
+
+          const countries = unique(arr.map(r => r.country));
+
+          const channels = unique(arr.map(r => r.channel));
+
+          populateSelect('countrySelect', countries);
+
+          populateSelect('channelSelect', channels);
+
+          updateRemainingHint(); // Show remaining percentage on load
+
+          setStatus(`✅ Rates loaded: ${arr.length}`);
+
+        })
+
+        .withFailureHandler(err => {
+
+          setStatus('Failed to load rates: ' + (err && err.message ? err.message : err), true);
+
+          alert('Failed to load rates. Check "Combined Channel Rates".');
+
+        })
+
+        .getRateData();
+
+      google.script.run
+
+        .withSuccessHandler(dsps => {
+
+          const list = Array.isArray(dsps) ? dsps : [];
+
+          dspList = list;
+
+          populateSelect('dspSelect', list.map(d => d.name));
+
+          setStatus(prevStatus() + ` | DSPs loaded: ${list.length}`);
+
+        })
+
+        .withFailureHandler(err => {
+
+          setStatus('Failed to load DSPs: ' + (err && err.message ? err.message : err), true);
+
+          alert('Failed to load DSPs. Check "DSP Fees".');
+
+        })
+
+        .getDSPs();
+
+      document.getElementById('countrySelect').addEventListener('change', onGeoChange);
+
+      document.getElementById('channelSelect').addEventListener('change', onGeoChange);
+
+      document.getElementById('publisherSelect').addEventListener('change', updateFormats);
+
+      document.getElementById('formatSelect').addEventListener('change', maybeShowRate);
+
+      document.getElementById('weightInput').addEventListener('input', onWeightInput);
+
+    }
+
+    function unique(arr) { return [...new Set(arr.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b))); }
+
+    function populateSelect(id, options) {
+
+      const sel = document.getElementById(id);
+
+      sel.innerHTML = '<option value="">— Select —</option>';
+
+      options.forEach(val => {
+
+        const opt = document.createElement('option');
+
+        opt.value = val;
+
+        opt.textContent = val;
+
+        sel.appendChild(opt);
+
+      });
+
+    }
+
+    function onGeoChange() { updatePublishers(); maybeShowRate(); }
+
+    function updatePublishers() {
+
+      const country = valueOf('countrySelect');
+
+      const channel = valueOf('channelSelect');
+
+      if (!country || !channel) {
+
+        populateSelect('publisherSelect', []);
+
+        populateSelect('formatSelect', []);
+
+        hideRateNotice();
+
+        return;
+
+      }
+
+      const publishers = unique(rateData.filter(r => r.country === country && r.channel === channel).map(r => r.publisher));
+
+      populateSelect('publisherSelect', publishers);
+
+      populateSelect('formatSelect', []);
+
+      hideRateNotice();
+
+    }
+
+    function updateFormats() {
+
+      const country = valueOf('countrySelect');
+
+      const channel = valueOf('channelSelect');
+
+      const publisher = valueOf('publisherSelect');
+
+      if (!country || !channel || !publisher) {
+
+        populateSelect('formatSelect', []);
+
+        hideRateNotice();
+
+        return;
+
+      }
+
+      const formats = unique(rateData.filter(r => r.country === country && r.channel === channel && r.publisher === publisher).map(r => r.format));
+
+      populateSelect('formatSelect', formats);
+
+      hideRateNotice();
+
+    }
+
+    function valueOf(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+    function maybeShowRate() {
+
+      const country = valueOf('countrySelect');
+
+      const channel = valueOf('channelSelect');
+
+      const publisher = valueOf('publisherSelect');
+
+      const format = valueOf('formatSelect');
+
+      if (!country || !channel || !publisher || !format) { hideRateNotice(); return; }
+
+      const match = rateData.find(r => r.country === country && r.channel === channel && r.publisher === publisher && r.format === format);
+
+      if (match) {
+
+        const { buyCpm = 0, currency = 'EUR' } = match;
+
+        showRateNotice(`Rate: ${currency} ${Number(buyCpm).toFixed(2)} CPM`);
+
+      } else {
+
+        showRateNotice('No matching rate found for this selection.', true);
+
+      }
+
+    }
+
+    function showRateNotice(text, isWarn = false) {
+
+      const el = document.getElementById('rateNotice');
+
+      el.classList.remove('hidden'); el.classList.remove('ok','warn'); el.classList.add(isWarn ? 'warn' : 'ok'); el.textContent = text;
+
+    }
+
+    function hideRateNotice() { const el = document.getElementById('rateNotice'); el.classList.add('hidden'); el.textContent = ''; }
+
+    function onWeightInput() { updateRemainingHint(); }
+
+    function updateRemainingHint() { 
+
+      const hint = document.getElementById('remainingHint');
+
+      const inputVal = document.getElementById('weightInput').value;
+
+      const currentInput = parseWeight(inputVal) || 0;
+
+      google.script.run
+
+        .withSuccessHandler(totalPct => {
+
+          const total = (totalPct || 0) + currentInput;
+
+          const remaining = Math.max(0, 1 - total);
+
+          const remainingPct = (remaining * 100).toFixed(1);
+
+          if (remaining > 0) {
+
+            hint.textContent = `Percent remaining: ${remainingPct}%`;
+
+            hint.style.color = remaining < 0.1 ? '#d69e2e' : '#718096'; // Warn if less than 10% left
+
+          } else if (total > 1) {
+
+            hint.textContent = `⚠️ Over by ${((total - 1) * 100).toFixed(1)}%`;
+
+            hint.style.color = '#e53e3e';
+
+          } else {
+
+            hint.textContent = '✅ 100% allocated';
+
+            hint.style.color = '#38a169';
+
+          }
+
+        })
+
+        .withFailureHandler(() => {
+
+          hint.textContent = 'Percent remaining: --';
+
+          hint.style.color = '#718096';
+
+        })
+
+        .getTotalPercentage();
+
+    }
+
+    function recalculate() {
+
+      disableAdd(true);
+
+      setStatus('Recalculating…');
+
+      google.script.run.withSuccessHandler(() => {
+
+        setStatus('✅ Recalculated.');
+
+        disableAdd(false);
+
+      }).withFailureHandler(err => {
+
+        setStatus('Recalculate failed: ' + (err && err.message ? err.message : err), true);
+
+        disableAdd(false);
+
+      }).recalculatePlanner();
+
+    }
+
+    function parseWeight(inputVal) {
+
+      if (inputVal === '' || inputVal === null || inputVal === undefined) return NaN;
+
+      let v = String(inputVal).trim();
+
+      if (v.endsWith('%')) v = v.slice(0, -1);
+
+      let n = parseFloat(v);
+
+      if (isNaN(n)) return NaN;
+
+      if (n > 1) n = n / 100;
+
+      return n;
+
+    }
+
+    function addRow() {
+
+      const country = valueOf('countrySelect');
+
+      const channel = valueOf('channelSelect');
+
+      const publisher = valueOf('publisherSelect');
+
+      const format = valueOf('formatSelect');
+
+      const dsp = valueOf('dspSelect');
+
+      const rawWeight = document.getElementById('weightInput').value;
+
+      const weight = parseWeight(rawWeight);
+
+      if (!country || !channel || !publisher || !format || !dsp) { alert('⚠️ Please complete all selections.'); return; }
+
+      if (isNaN(weight) || weight <= 0) { alert('⚠️ Enter a valid Percentage Delivery (> 0).'); return; }
+
+      const hasRate = rateData.some(r => r.country === country && r.channel === channel && r.publisher === publisher && r.format === format);
+
+      if (!hasRate) { alert('⚠️ No matching rate found for the selected Country/Channel/Publisher/Format.'); return; }
+
+      disableAdd(true);
+
+      setStatus('Adding row…');
+
+      const row = { country, channel, publisher, format, weight, dsp };
+
+      google.script.run
+
+        .withSuccessHandler(() => {
+
+          document.getElementById('weightInput').value = '';
+
+          setStatus('✅ Row added.');
+
+          disableAdd(false);
+
+          maybeShowRate();
+
+          updateRemainingHint(); // Update remaining percentage
+
+          // Server recalculates in appendPlannerRow
+
+        })
+
+        .withFailureHandler(err => {
+
+          setStatus('Add failed: ' + (err && err.message ? err.message : err), true);
+
+          disableAdd(false);
+
+        })
+
+        .appendPlannerRow(row);
+
+    }
+
+    function removeSelectedRow() {
+
+      disableAdd(true);
+
+      setStatus('Removing selected row…');
+
+      google.script.run
+
+        .withSuccessHandler(() => {
+
+          setStatus('✅ Row removed.');
+
+          disableAdd(false);
+
+          updateRemainingHint(); // Update remaining percentage
+
+        })
+
+        .withFailureHandler(err => {
+
+          setStatus('Remove failed: ' + (err && err.message ? err.message : err), true);
+
+          disableAdd(false);
+
+        })
+
+        .removeSelectedPlannerRow();
+
+    }
+
+    function disableAdd(disabled) {
+
+      const btn = document.getElementById('addBtn');
+
+      if (!btn) return;
+
+      btn.disabled = !!disabled;
+
+      btn.style.opacity = disabled ? 0.6 : 1;
+
+      btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+
+    }
+
+    function setStatus(msg, isError = false) {
+
+      const el = document.getElementById('status');
+
+      el.classList.remove('error');
+
+      if (isError) el.classList.add('error');
+
+      el.textContent = msg || '';
+
+    }
+
+    function prevStatus() { const el = document.getElementById('status'); return el && el.textContent ? el.textContent : ''; }
+
+    window.onload = init;
+
+  </script>
+
+</body>
+
+</html>
