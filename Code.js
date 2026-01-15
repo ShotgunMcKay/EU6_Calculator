@@ -489,6 +489,7 @@ function ensureBuyingPointDropdown() {
 
 }
 
+
 function updateTradingDealFromBuyingPoint(sh) {
 
   try {
@@ -547,9 +548,11 @@ function updateTradingDealFromBuyingPoint(sh) {
 
         percentage = parseFloat(data[i][1]) || 0;
 
-        // If percentage is > 1, assume it's a percentage value and convert
+        // Since cells are percentage formatted, values are already decimals (0.15 for 15%)
 
-        if (percentage > 1) percentage = percentage / 100;
+        // No conversion needed - just ensure it's a valid decimal between 0 and 1
+
+        if (percentage > 1) percentage = percentage / 100; // Fallback for any non-formatted cells
 
         Logger.log(`updateTradingDealFromBuyingPoint: Found ${buyingPoint} = ${percentage}`);
 
@@ -599,39 +602,6 @@ function getTradingDealPercentage() {
 
 }
 
-/* ========== MANUAL REFRESH BUYING POINT (for testing) ========== */
-
-function refreshBuyingPointDropdown() {
-
-  try {
-
-    ensureBuyingPointDropdown();
-
-    const sh = SpreadsheetApp.getActive().getSheetByName('EU6 Calculator');
-
-    const buyingPoint = sh.getRange('D3').getValue();
-
-    if (buyingPoint) {
-
-      updateTradingDealFromBuyingPoint(sh);
-
-      safeAlert('Buying Point dropdown refreshed. Trading Deal updated.');
-
-    } else {
-
-      safeAlert('Buying Point dropdown refreshed. No buying point selected.');
-
-    }
-
-  } catch (e) {
-
-    safeAlert('Error refreshing Buying Point: ' + e.toString());
-
-    Logger.log('refreshBuyingPointDropdown error: ' + e);
-
-  }
-
-}
 
 /* ========== FX (cached per day) ========== */
 
