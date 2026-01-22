@@ -67,13 +67,11 @@ function onEdit(e) {
 
     if (importantCells.includes(a1)) {
 
-      // If D3 (Buying Point) changed, update F3 (Trading Deal) with percentage
+      // If D3 (Buying Point) changed, recalculate planner with new trading deals
 
       if (a1 === 'D3') {
 
-        updateTradingDealFromBuyingPoint(sh);
-
-        // Small delay to ensure F3 is updated before recalculating
+        // Small delay to ensure buying point is updated before recalculating
 
         Utilities.sleep(100);
 
@@ -437,9 +435,7 @@ function ensureBuyingPointDropdown() {
 
   if (!sh.getRange('C3').getValue()) sh.getRange('C3').setValue('Buying Point');
 
-  if (!sh.getRange('E3').getValue()) sh.getRange('E3').setValue('Trading Deal');
-
-  // Get buying points from Trading Deals sheet
+  // Get buying points and channels from Trading Deals sheet
 
   const tradingDealsSheet = SpreadsheetApp.getActive().getSheetByName('Trading Deals');
 
@@ -449,39 +445,33 @@ function ensureBuyingPointDropdown() {
 
   if (data.length < 2) return; // Need at least headers + 1 row
 
-  // Extract buying points from column A (skip header row)
+  // Extract buying points from column B (skip header row)
 
   const buyingPoints = data.slice(1)
 
-    .map(row => String(row[0] || '').trim())
+    .map(row => String(row[1] || '').trim())
 
     .filter(val => val !== '');
 
-  if (buyingPoints.length === 0) return;
+  // Remove duplicates
 
-  // Set up dropdown in D3
+  const uniqueBuyingPoints = [...new Set(buyingPoints)];
 
-  const cell = sh.getRange('D3');
+  if (uniqueBuyingPoints.length === 0) return;
 
-  const rule = SpreadsheetApp.newDataValidation()
+  // Set up dropdown in D3 (Buying Point)
 
-    .requireValueInList(buyingPoints, true)
+  const buyingPointCell = sh.getRange('D3');
+
+  const buyingPointRule = SpreadsheetApp.newDataValidation()
+
+    .requireValueInList(uniqueBuyingPoints, true)
 
     .setAllowInvalid(false)
 
     .build();
 
-  cell.setDataValidation(rule);
-
-  // If D3 has a value, update F3 with the corresponding percentage
-
-  const buyingPoint = cell.getValue();
-
-  if (buyingPoint) {
-
-    updateTradingDealFromBuyingPoint(sh);
-
-  }
+  buyingPointCell.setDataValidation(buyingPointRule);
 
   // Also set up a change handler to update when dropdown value changes
 
@@ -490,29 +480,12 @@ function ensureBuyingPointDropdown() {
 }
 
 
-function updateTradingDealFromBuyingPoint(sh) {
+
+function getTradingDealPercentage(buyingPoint, channel) {
 
   try {
 
-    if (!sh) sh = SpreadsheetApp.getActive().getSheetByName('EU6 Calculator');
-
-    if (!sh) {
-
-      Logger.log('updateTradingDealFromBuyingPoint: Sheet not found');
-
-      return;
-
-    }
-
-    const buyingPoint = String(sh.getRange('D3').getValue() || '').trim();
-
-    if (!buyingPoint) {
-
-      sh.getRange('F3').setValue('');
-
-      return;
-
-    }
+    if (!buyingPoint || !channel) return 0;
 
     // Look up percentage from Trading Deals sheet
 
@@ -520,9 +493,9 @@ function updateTradingDealFromBuyingPoint(sh) {
 
     if (!tradingDealsSheet) {
 
-      Logger.log('updateTradingDealFromBuyingPoint: Trading Deals sheet not found');
+      Logger.log('getTradingDealPercentage: Trading Deals sheet not found');
 
-      return;
+      return 0;
 
     }
 
@@ -530,23 +503,25 @@ function updateTradingDealFromBuyingPoint(sh) {
 
     if (data.length < 2) {
 
-      Logger.log('updateTradingDealFromBuyingPoint: Trading Deals sheet has no data');
+      Logger.log('getTradingDealPercentage: Trading Deals sheet has no data');
 
-      return;
+      return 0;
 
     }
 
-    // Find matching buying point (column A) and get percentage (column B)
+    // Find matching buying point (column B) and channel (column C), get percentage (column D)
 
     let percentage = null;
 
     for (let i = 1; i < data.length; i++) {
 
-      const rowBuyingPoint = String(data[i][0] || '').trim();
+      const rowBuyingPoint = String(data[i][1] || '').trim();
 
-      if (rowBuyingPoint === buyingPoint) {
+      const rowChannel = String(data[i][2] || '').trim();
 
-        percentage = parseFloat(data[i][1]) || 0;
+      if (rowBuyingPoint === buyingPoint && rowChannel === channel) {
+
+        percentage = parseFloat(data[i][3]) || 0;
 
         // Since cells are percentage formatted, values are already decimals (0.15 for 15%)
 
@@ -554,7 +529,7 @@ function updateTradingDealFromBuyingPoint(sh) {
 
         if (percentage > 1) percentage = percentage / 100; // Fallback for any non-formatted cells
 
-        Logger.log(`updateTradingDealFromBuyingPoint: Found ${buyingPoint} = ${percentage}`);
+        Logger.log(`getTradingDealPercentage: Found ${buyingPoint} + ${channel} = ${percentage}`);
 
         break;
 
@@ -562,45 +537,23 @@ function updateTradingDealFromBuyingPoint(sh) {
 
     }
 
-    // Set F3 with the percentage (as decimal, e.g., 0.15 for 15%)
-
-    if (percentage !== null) {
-
-      sh.getRange('F3').setValue(percentage);
-
-      Logger.log(`updateTradingDealFromBuyingPoint: Set F3 to ${percentage}`);
-
-    } else {
-
-      Logger.log(`updateTradingDealFromBuyingPoint: No match found for ${buyingPoint}`);
-
-      sh.getRange('F3').setValue(0);
-
+    // Default to 0% if no matching buying point + channel combination found
+    if (percentage === null) {
+      Logger.log(`getTradingDealPercentage: No match found for ${buyingPoint} + ${channel}, defaulting to 0%`);
     }
+
+    return percentage !== null ? percentage : 0;
 
   } catch (e) {
 
-    Logger.log('updateTradingDealFromBuyingPoint error: ' + e.toString());
+    Logger.log('getTradingDealPercentage error: ' + e.toString());
 
-    safeAlert('Error updating Trading Deal: ' + e.toString());
+    return 0;
 
   }
 
 }
 
-function getTradingDealPercentage() {
-
-  const sh = SpreadsheetApp.getActive().getSheetByName('EU6 Calculator');
-
-  if (!sh) return 0;
-
-  const val = parseFloat(sh.getRange('F3').getValue()) || 0;
-
-  // If > 1, assume it's a percentage and convert to decimal
-
-  return val > 1 ? val / 100 : val;
-
-}
 
 
 /* ========== FX (cached per day) ========== */
@@ -683,7 +636,7 @@ I Gross Budget (In Plan Currency) | J Net Budget | K Net Budget (In Plan Currenc
 
 L Impressions | M Publisher Spend | N DSP Fee Value | O Total Media Spend | P Gross Margin | Q Gross Profit | R Gross Margin % | S Gross Profit % | T Margin (or Margin %)
 
-- Buying Point in D3, Trading Deal % in F3 (from Trading Deals sheet)
+- Buying Point in D3 (global), Trading Deal % in E3 (for display only), per-line trading deals based on Buying Point + Channel
 
 - Buy-side (G, M, N, O) stays in native currency (per row)
 
@@ -715,7 +668,7 @@ function recalculatePlanner() {
 
   const fx = getCachedExchangeRates();
 
-  const tradingDealPct = getTradingDealPercentage(); // Get trading deal percentage from F3
+  const globalBuyingPoint = String(sh.getRange('D3').getValue() || '').trim();
 
   // Cache sheet reference and batch format operations
 
@@ -751,149 +704,45 @@ function recalculatePlanner() {
 
   const cFormat = idx('format');
 
-  const cPct = headers.indexOf('Percentage Delivery') + 1 || idx('percentage');
+  const cPct = headers.indexOf('Percentage Delivery') + 1;
 
-  const cCurr = idx('currency');
+  const cCurr = headers.indexOf('Currency') + 1;
 
-  const cBuy  = idx('buy cpm');
+  const cBuy  = headers.indexOf('Buy CPM') + 1;
 
-  const cDSP  = idx('dsp fee');
+  const cDSP  = headers.indexOf('DSP Fee') + 1;
 
-  const cGross    = idx('gross budget');
+  const cGross    = headers.indexOf('Gross Budget') + 1;
 
-  const cGrossPlan= idx('gross budget (in plan');
+  const cGrossPlan= headers.indexOf('Gross Budget (In Plan Currency)') + 1;
 
-  const cNet      = idx('net budget');
+  const cNet      = headers.indexOf('Net Budget') + 1;
 
-  const cNetPlan  = idx('net budget (in plan');
+  const cNetPlan  = headers.indexOf('Net Budget (In Plan Currency)') + 1;
 
-  const cImps     = idx('impressions');
+  const cImps     = headers.indexOf('Impressions') + 1;
 
-  const cPub      = idx('publisher spend');
+  const cPub      = headers.indexOf('Publisher Spend') + 1;
 
-  const cDSPV     = idx('dsp fee value');
+  const cDSPV     = headers.indexOf('DSP Fee Value') + 1;
 
-  const cMedia    = idx('total media spend');
+  const cMedia    = headers.indexOf('Total Media Spend') + 1;
 
-  const cHard     = idx('allocated hard');
+  const cHard     = headers.indexOf('Allocated Hard Costs') + 1;
 
   const cProfit   = idx('profit');
 
-  // Create missing columns if they don't exist (add at end in correct order)
+  // Find margin-related columns using exact header names
 
-  let headersUpdated = false;
+  const cGrossMargin = headers.indexOf('Gross Margin') + 1;
 
-  // Order: Gross Margin > Margin > Gross Profit > Profit %
+  const cMargin = headers.indexOf('Margin') + 1;
 
-  // 1. Gross Margin column (first)
+  const cTradingDealPct = headers.indexOf('Trading Deal %') + 1;
 
-  let cGrossMargin = idx('gross margin');
+  const cGrossProfit = headers.indexOf('Gross Profit') + 1;
 
-  if (cGrossMargin <= 0) { 
-
-    lastCol = sh.getLastColumn();
-
-    cGrossMargin = lastCol + 1; 
-
-    sh.getRange(5, cGrossMargin).setValue('Gross Margin'); 
-
-    lastCol = cGrossMargin; // Update for later use
-
-    headersUpdated = true;
-
-  }
-
-  // 2. Margin column (second)
-
-  let cMargin = headers.indexOf('Margin') + 1;
-
-  if (cMargin <= 0) cMargin = headers.indexOf('Margin %') + 1;
-
-  if (cMargin <= 0) { 
-
-    lastCol = sh.getLastColumn();
-
-    cMargin = lastCol + 1; 
-
-    sh.getRange(5, cMargin).setValue('Margin'); 
-
-    lastCol = cMargin; // Update for later use
-
-    headersUpdated = true;
-
-  }
-
-  // 3. Gross Profit column (third)
-
-  let cGrossProfit = idx('gross profit');
-
-  if (cGrossProfit <= 0) { 
-
-    lastCol = sh.getLastColumn();
-
-    cGrossProfit = lastCol + 1; 
-
-    sh.getRange(5, cGrossProfit).setValue('Gross Profit'); 
-
-    lastCol = cGrossProfit; // Update for later use
-
-    headersUpdated = true;
-
-  }
-
-  // 4. Profit % column (fourth)
-
-  let cProfitPct = idx('profit %');
-
-  if (cProfitPct <= 0) {
-
-    // Try to find it with different variations
-
-    cProfitPct = headers.findIndex(h => h.toLowerCase().includes('profit') && h.toLowerCase().includes('%')) + 1;
-
-    if (cProfitPct <= 0) { 
-
-      lastCol = sh.getLastColumn();
-
-      cProfitPct = lastCol + 1; 
-
-      sh.getRange(5, cProfitPct).setValue('Profit %'); 
-
-      lastCol = cProfitPct; // Update for later use
-
-      headersUpdated = true;
-
-    }
-
-  }
-
-  // Re-read headers if we added any columns
-
-  if (headersUpdated) {
-
-    lastCol = sh.getLastColumn();
-
-    headers = sh.getRange(5, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
-
-    // Re-find column indices after headers update
-
-    cGrossMargin = idx('gross margin');
-
-    cMargin = headers.indexOf('Margin') + 1;
-
-    if (cMargin <= 0) cMargin = headers.indexOf('Margin %') + 1;
-
-    cGrossProfit = idx('gross profit');
-
-    cProfitPct = idx('profit %');
-
-    if (cProfitPct <= 0) {
-
-      cProfitPct = headers.findIndex(h => h.toLowerCase().includes('profit') && h.toLowerCase().includes('%')) + 1;
-
-    }
-
-  }
+  const cProfitPct = headers.indexOf('Profit %') + 1;
 
   // Read all input values in one batch
 
@@ -1032,8 +881,13 @@ function recalculatePlanner() {
     r.grossMarginPlan = toPlan(grossMarginNative, r.curr, target);
 
     // Trading Deal Amount (percentage of Net Budget/Revenue in plan currency)
+    // Use per-line trading deal percentage based on global buying point + line channel
 
-    const tradingDealPlan = r.netPlan * tradingDealPct;
+    const lineTradingDealPct = getTradingDealPercentage(globalBuyingPoint, r.channel);
+
+    r.lineTradingDealPct = lineTradingDealPct; // Store for output to sheet
+
+    const tradingDealPlan = r.netPlan * lineTradingDealPct;
 
     // Convert trading deal rebate to native currency for calculation
 
@@ -1065,7 +919,7 @@ function recalculatePlanner() {
 
   const numRows = lines.length;
 
-  const maxCol = Math.max(cCurr, cBuy, cGross, cGrossPlan, cNet, cNetPlan, cImps, cPub, cDSPV, cMedia, cHard, cGrossProfit, cGrossMargin, cProfit, cProfitPct, cMargin, lastCol);
+  const maxCol = Math.max(cCurr, cBuy, cGross, cGrossPlan, cNet, cNetPlan, cImps, cPub, cDSPV, cMedia, cHard, cGrossProfit, cGrossMargin, cProfit, cProfitPct, cMargin, cTradingDealPct, lastCol);
 
   // Initialize output matrix with existing values
 
@@ -1109,7 +963,7 @@ function recalculatePlanner() {
 
     if (cHard > 0) row[cHard - 1] = line.hardPlan;
 
-    // Write columns in order: Gross Margin > Margin > Gross Profit > Profit %
+    // Write columns in order: Gross Margin > Margin > Trading Deal % > Gross Profit > Profit %
 
     // 1. Gross Margin (profit BEFORE trading deal - higher value)
 
@@ -1119,11 +973,15 @@ function recalculatePlanner() {
 
     if (cMargin > 0) row[cMargin - 1] = line.margin;
 
-    // 3. Gross Profit (profit AFTER trading deal - lower value)
+    // 3. Trading Deal % (percentage applied to this line item)
+
+    if (cTradingDealPct > 0) row[cTradingDealPct - 1] = line.lineTradingDealPct;
+
+    // 4. Gross Profit (profit AFTER trading deal - lower value)
 
     if (cGrossProfit > 0) row[cGrossProfit - 1] = line.grossProfitPlan;
 
-    // 4. Profit % (after rebates - final margin)
+    // 5. Profit % (after rebates - final margin)
 
     if (cProfitPct > 0) row[cProfitPct - 1] = line.profitPct;
 
@@ -1177,11 +1035,13 @@ function recalculatePlanner() {
 
     if (cHard > 0) rowFormats[cHard - 1] = planFmt;
 
-    // Format columns in order: Gross Margin > Margin > Gross Profit > Profit %
+    // Format columns in order: Gross Margin > Margin > Trading Deal % > Gross Profit > Profit %
 
     if (cGrossMargin > 0) rowFormats[cGrossMargin - 1] = planFmt;
 
     if (cMargin > 0) rowFormats[cMargin - 1] = '0.0%';
+
+    if (cTradingDealPct > 0) rowFormats[cTradingDealPct - 1] = '0.0%';
 
     if (cGrossProfit > 0) rowFormats[cGrossProfit - 1] = planFmt;
 
